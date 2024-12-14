@@ -1,3 +1,4 @@
+import NotFoundError from "../domain/errors/not-found-error.js";
 
 const products = [
   {
@@ -75,40 +76,71 @@ const products = [
 ];
 
 
-export const getProducts = (req, res) =>  res.status(200).json(products).send()
+export const getProducts = (req, res, next) => { 
+  try {
+    return res.status(200).json(products).send();
+  } catch (error) {
+    next(error);
+    
+  }
+  
+};
 
-export const createProduct = (req, res) => {
-  products.push(req.body);
-  res.status(201).send()
-}
+export const createProduct = (req, res , next) => {
+  try {
+    products.push(req.body);
+    return res.status(201).send();
+  } catch (error) {
+    next(error);
+  }
+ 
+};
 
-export const getProduct = (req, res) => {
-  const id = req.params.id
-  const product = products.find((pro) => pro.id == id);
-  res.status(200).json(product).send()
-}
-
-export const deleteProduct = (req, res) => {
-    const id = req.params.id;
-    const index = products.findIndex((pro) => pro.id == id);
-    if(index !== id) {
-        products.splice(index,1)
+export const getProduct = (req, res , next) => {
+  try {
+    const id = req.params.id
+    const product = products.find((pro) => pro.id == id);
+  
+    if (!product) {
+      throw new NotFoundError("product not found");
     }
-    res.status(201).send()
+    return res.status(200).json(product).send();
+    
+  } catch (error) {
+    next(error);
+  }
+  
+};
 
-}
+export const deleteProduct = (req, res , next) => {
+  try {
+    const id = req.params.id;
+    const index = products.findIndex((pro) => pro.id === id);
+    if(index === -1) {
+      throw new NotFoundError("product not found");
+    }
+    products.splice(index,1)
+      return res.status(204).send()
+    
+  } catch (error) {
+    next(error);
+  }
 
-export const updateProduct = (req, res) => {
-  const {id} = req.params
+};
+
+export const updateProduct = (req, res , next) => {
+  try {
+    const {id} = req.params
   const updates = req.body
   const product = products.find((pro) => pro.id === id);
 
   if(!product){
-    return res.status(404).json(products).send('product not found')
+    throw new NotFoundError("product not found");
+  }
+  Object.assign(product, updates)
+  return res.status(201).json(products).send() 
+  } catch (error) {
+    next(error);
   }
 
-  Object.assign(product, updates)
-
-  res.status(201).json(products).send()
-
-}
+};
