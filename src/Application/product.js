@@ -1,8 +1,9 @@
 import NotFoundError from "../domain/errors/not-found-error.js";
+import Product from "../infrastructure/schemas/Product.js";
 
 const products = [
   {
-    categoryId: "1",
+    categoryId: "675eec72bbda71bc840cf9f2",
     image: "/assets/products/airpods-max.png",
     id: "1",
     name: "AirPods Max",
@@ -11,7 +12,7 @@ const products = [
       "Lorem ipsum dolor sit amet consectetur adipisicing elit. Quas, sequi?",
   },
   {
-    categoryId: "3",
+    categoryId: "675eec97bbda71bc840cf9f4",
     image: "/assets/products/echo-dot.png",
     id: "2",
     name: "Echo Dot",
@@ -29,7 +30,7 @@ const products = [
       "Lorem ipsum dolor sit amet consectetur adipisicing elit. Quas, sequi?",
   },
   {
-    categoryId: "1",
+    categoryId: "675eec72bbda71bc840cf9f2",
     image: "/assets/products/quietcomfort.png",
     id: "4",
     name: "Bose QuiteComfort",
@@ -76,9 +77,17 @@ const products = [
 ];
 
 
-export const getProducts = (req, res, next) => { 
+export const getProducts = async (req, res, next) => { 
   try {
-    return res.status(200).json(products).send();
+    const { categoryId } = req.query;
+    if(!categoryId){
+    const data = await Product.find();
+    return res.status(200).json(data).send();
+    }
+
+    const data = await Product.find({categoryId});
+    return res.status(200).json(data).send();
+
   } catch (error) {
     next(error);
     
@@ -86,9 +95,9 @@ export const getProducts = (req, res, next) => {
   
 };
 
-export const createProduct = (req, res , next) => {
+export const createProduct = async (req, res , next) => {
   try {
-    products.push(req.body);
+    await Product.create(req.body)
     return res.status(201).send();
   } catch (error) {
     next(error);
@@ -96,10 +105,10 @@ export const createProduct = (req, res , next) => {
  
 };
 
-export const getProduct = (req, res , next) => {
+export const getProduct = async (req, res , next) => {
   try {
-    const id = req.params.id
-    const product = products.find((pro) => pro.id == id);
+    const id = req.params.id;
+    const product = await Product.findById(id).populate("categoryId");
   
     if (!product) {
       throw new NotFoundError("product not found");
@@ -112,11 +121,11 @@ export const getProduct = (req, res , next) => {
   
 };
 
-export const deleteProduct = (req, res , next) => {
+export const deleteProduct = async (req, res , next) => {
   try {
     const id = req.params.id;
-    const index = products.findIndex((pro) => pro.id === id);
-    if(index === -1) {
+    const product = await Product.findByIdAndDelete(id);
+    if(!product) {
       throw new NotFoundError("product not found");
     }
     products.splice(index,1)
@@ -128,17 +137,15 @@ export const deleteProduct = (req, res , next) => {
 
 };
 
-export const updateProduct = (req, res , next) => {
+export const updateProduct = async (req, res , next) => {
   try {
-    const {id} = req.params
-  const updates = req.body
-  const product = products.find((pro) => pro.id === id);
+  const id = req.params.id;
+  const product = await Product.findByIdAndUpdate(id , req.body);
 
   if(!product){
     throw new NotFoundError("product not found");
   }
-  Object.assign(product, updates)
-  return res.status(201).json(products).send() 
+  return res.status(200).send(product); 
   } catch (error) {
     next(error);
   }
