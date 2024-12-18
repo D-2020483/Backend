@@ -3,6 +3,7 @@ import {productRouter} from './api/product.js'
 import globalErrorHandlingMiddleware from './api/middleware/global-error-handling-middleware.js';
 import { categoryRouter } from './api/category.js';
 import { connectDB } from './infrastructure/db.js';
+import { orderRouter } from './api/order.js';
 
 const app = express();
 
@@ -17,6 +18,7 @@ app.use((req, res, next) => {
 
 app.use('/api/products', productRouter);
 app.use('/api/categories', categoryRouter);
+app.use('/api/orders', orderRouter)
 app.use(globalErrorHandlingMiddleware);
 
 //app.get('/products', getProducts)
